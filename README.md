@@ -1,6 +1,6 @@
 #### Functions using dual-energy CT (DECT):
 
-##Two major functions:
+Two major functions:
 1.) Optimized 3-material decomposition for edema imaging
 2.) DECT based bone density calibration
 
