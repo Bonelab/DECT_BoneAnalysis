@@ -222,7 +222,7 @@ def main():
     description='''Function to segment edema based on 3-material decomposition.
 
     This program will read in the edema fraction image from 3-material decomposition, as well
-    as the endosteal mask for the bone of interest, and will segment out edema by applying a threshold,
+    as the endosteal mask for the bone of interest, and will segment out edema by applying a non-local means filter, then applying a threshold,
     masking out the non-marrow regions of the image, and performing a component labeling step to remove noise.
 
 
@@ -234,7 +234,7 @@ def main():
     Also includes optional functions (threshold_edema_subtractcontra and TransformContra), which can be applied in bilateral scans to improve
     sensitivity of edema detection. These functions will threshold the edema fraction image after subtracting out the contralateral knee
     (allows to account for normal variations in bone marrow fluid content -- improves imaging sensitivity and reduces noise in segmented edema image)
-    This function still needs to be fully incorporated in this script. Prior to applying this step, must first register the contralateral knee to align with the injured knee.
+    This function still needs to be fully incorporated in this script. Prior to applying this step, must first register the contralateral knee to align with the injured knee (i.e., using Register_Injured-Contralateral.py).
 
     This method has been published as de Bakker et al. (2021) "A quantitative assessment of dual energy computed tomography-based material decomposition for imaging bone marrow edema associated with acute knee injury" Med Phys
     DOI: https://doi.org/10.1002/mp.14791
