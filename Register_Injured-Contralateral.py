@@ -5,9 +5,7 @@ from functools import reduce
 import SimpleITK as sitk
 import sys
 import os
-# import ManualInitialGuessLibrary_testMRI
 import numpy as np
-# import pandas as pd
 import argparse
 from bonelab.util.echo_arguments import echo_arguments
 
@@ -205,7 +203,7 @@ def main():
 
     # Parse and display
     args = parser.parse_args()
-    print(echo_arguments('Segment_Edema', vars(args)))
+    print(echo_arguments('Register_Injured-Contralateral', vars(args)))
 
     # Run program
     register_contra(**vars(args))
