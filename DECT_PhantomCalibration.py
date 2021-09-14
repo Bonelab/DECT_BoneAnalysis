@@ -2,7 +2,6 @@ import SimpleITK as sitk
 import sys
 import os
 import numpy as np
-# import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
 from bonelab.util.echo_arguments import echo_arguments
@@ -10,8 +9,8 @@ from bonelab.util.echo_arguments import echo_arguments
 
 def DECT_Calibration(filePath,lowenergy_filename,highenergy_filename,HA_mask_fnm):
     #read in images:
-    mono_40_fnm = '40keV'
-    mono_90_fnm = '90keV'
+    mono_40_fnm = lowenergy_filename
+    mono_90_fnm = highenergy_filename
     # mono_40 = sitk.ReadImage(filePath+'/'+mono_40_fnm+'.mha', sitk.sitkFloat32)
     mono_40 = sitk.ReadImage(filePath+'/'+mono_40_fnm+'.mha', sitk.sitkFloat32)
     mono_90 = sitk.ReadImage(filePath+'/'+mono_90_fnm+'.mha', sitk.sitkFloat32)
@@ -78,7 +77,7 @@ def DECT_Calibration(filePath,lowenergy_filename,highenergy_filename,HA_mask_fnm
     #save the slope and offset values to csv file
     d = {'0 slope 40keV': [m_40], '1 offset 40keV': [b_40], '2 slope 90keV': [m_90], '3 offset 90keV': [b_90]}
     df = pd.DataFrame(data=d)
-    df.to_csv('CalibrationSlope&Offset_SALTACII_DECT.csv',mode='a')
+    df.to_csv('CalibrationSlope&Offset_DECT.csv',mode='a')
 
     #Convert image from HU to mgHA using best fit line from phantom.
     #Based on method from Sfeir et al., Bone 2018
