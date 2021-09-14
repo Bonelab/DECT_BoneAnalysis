@@ -5,3 +5,4 @@ bonelab/util/.DS_Store
 *.pyc
 SegLabels.csv
 *.tfm
+*.docx
