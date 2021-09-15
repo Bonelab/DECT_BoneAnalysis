@@ -60,7 +60,7 @@ def SEQCT_Calibration(filePath,GSI_filename,HA_mask_fnm):
     #save the slope and offset values to csv file
     d = {'0 slope': [m], '11 offset': [b]}
     df = pd.DataFrame(data=d)
-    df.to_csv('CalibrationSlope&Offset_StandardSEQCT.csv',mode='a')
+    df.to_csv(filePath+'/CalibrationSlope&Offset_StandardSEQCT.csv',mode='a')
 
     #Convert image from HU to mgHA using best fit line from phantom.
     GSI_array = sitk.GetArrayFromImage(img_GSI)
