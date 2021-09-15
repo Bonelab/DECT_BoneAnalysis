@@ -6,3 +6,4 @@ bonelab/util/.DS_Store
 SegLabels.csv
 *.tfm
 *.docx
+*.csv

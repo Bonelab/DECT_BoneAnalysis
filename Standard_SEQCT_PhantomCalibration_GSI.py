@@ -15,32 +15,26 @@ def SEQCT_Calibration(filePath,GSI_filename,HA_mask_fnm):
 
 
     #read in images:
-    mono_40_fnm = 'GSI_Baseline'
-    # mono_40 = sitk.ReadImage(filePath+'/'+mono_40_fnm+'.mha', sitk.sitkFloat32)
-    mono_40 = sitk.ReadImage(filePath+'/'+mono_40_fnm+'.mha', sitk.sitkFloat32)
-    img_size = mono_40.GetSize()
-    img_spacing = mono_40.GetSpacing()
-    img_origin = mono_40.GetOrigin()
+    img_GSI = sitk.ReadImage(filePath+'/'+GSI_filename+'.mha', sitk.sitkFloat32)
+    img_size = img_GSI.GetSize()
+    img_spacing = img_GSI.GetSpacing()
+    img_origin = img_GSI.GetOrigin()
+    img_direction = img_GSI.GetDirection()
 
-    side_num = FindInjuredSide(participant_id)
-    if side_num == 0:
-        injured_side = 'left'
-    elif side_num == 1:
-        injured_side = 'right'
 
     #Calculate average intensity in phantom and find line of best fit:
     HA800_label = 3
     HA400_label = 2
     HA100_label = 1
 
-    HAphantom_mask = sitk.ReadImage(filePath+'/'+participant_id+'_HA_mask.mha')
+    HAphantom_mask = sitk.ReadImage(filePath+'/'+'HA_mask.mha')
     HA800_mask = HAphantom_mask == HA800_label
     HA400_mask = HAphantom_mask == HA400_label
     HA100_mask = HAphantom_mask == HA100_label
 
-    HA800_phantom = sitk.Mask(mono_40,HA800_mask)
-    HA400_phantom = sitk.Mask(mono_40,HA400_mask)
-    HA100_phantom = sitk.Mask(mono_40,HA100_mask)
+    HA800_phantom = sitk.Mask(img_GSI,HA800_mask)
+    HA400_phantom = sitk.Mask(img_GSI,HA400_mask)
+    HA100_phantom = sitk.Mask(img_GSI,HA100_mask)
 
 
     HA800_array = sitk.GetArrayFromImage(HA800_phantom)
@@ -69,11 +63,12 @@ def SEQCT_Calibration(filePath,GSI_filename,HA_mask_fnm):
     df.to_csv('CalibrationSlope&Offset_StandardSEQCT.csv',mode='a')
 
     #Convert image from HU to mgHA using best fit line from phantom.
-    mono40_array = sitk.GetArrayFromImage(mono_40)
-    mgHA_array = m*mono40_array + b
+    GSI_array = sitk.GetArrayFromImage(img_GSI)
+    mgHA_array = m*GSI_array + b
     img_HA = sitk.GetImageFromArray(mgHA_array)
     img_HA.SetSpacing(img_spacing)
     img_HA.SetOrigin(img_origin)
+    img_HA.SetDirection(img_direction)
 
 
     sitk.WriteImage(img_HA,filePath+'/'+'Calibrated_StandardSEQCT.mha',True)
