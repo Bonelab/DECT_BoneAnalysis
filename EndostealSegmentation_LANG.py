@@ -8,18 +8,17 @@ import os
 parser = argparse.ArgumentParser(description='''
 Endosteal segmentation of a QCT image using the method of Lang et al.
 
-The input image is assumed to be in mg/cc K2HPO4 equivalent densities.
+The input image is assumed to be in mg/cc HA equivalent densities.
 
 If there are multiple objects in the segmentation, all are evaluated.
 
 Lang, T. F., et al. "Volumetric quantitative computed tomography of the proximal femur: precision and relation to bone strength." Bone 21.1 (1997): 101-108.
 ''')
 parser.add_argument("model_dir", type=str, help="The filepath")
-parser.add_argument('--input_name', default='40keV', help='Input name without extension (QCT_SEG_EX_0001)')
+parser.add_argument('--input_name', default='Calibrated_StandardSEQCT', help='Input name without extension (QCT_SEG_EX_0001)')
 parser.add_argument('--erosion_distance', default=3.00, help='Trabecular erosion distance')
-parser.add_argument('--trab_threshold', default=600.0, help='Trabecular upper threshold in mg/cc K2HPO4')
-parser.add_argument('--cort_threshold', default=400.0, help='Cortical lower threshold in mg/cc K2HPO4')
-parser.add_argument('--density_ending', default='_mgHA.mha', help='Postfix for density calibrated image (mg/cc K2HPO4)')
+parser.add_argument('--trab_threshold', default=600.0, help='Trabecular upper threshold in mg/cc HA')
+parser.add_argument('--cort_threshold', default=400.0, help='Cortical lower threshold in mg/cc HA')
 parser.add_argument('--periosteal_ending', default='_SEG.mha', help='Postfix for periosteal image')
 parser.add_argument('--endosteal_ending', default='_LANG.mha', help='Postfix for endosteal image')
 
@@ -37,9 +36,9 @@ a = os.path.split(filePath)
 b = len(a)
 participant_id = a[b-1]
 
-density_filename = os.path.join(args.model_dir, participant_id+'_img'+ args.density_ending)
-periosteal_filename = os.path.join(args.model_dir, participant_id+'_'+args.input_name + args.periosteal_ending)
-endosteal_filename = os.path.join(args.model_dir, participant_id+ args.endosteal_ending)
+density_filename = os.path.join(args.model_dir,args.input_name+'.mha')
+periosteal_filename = os.path.join(args.model_dir, args.input_name + args.periosteal_ending)
+endosteal_filename = os.path.join(args.model_dir, args.input_name+args.endosteal_ending)
 
 print('Reading density image ' + density_filename)
 den = sitk.ReadImage(density_filename)
@@ -90,7 +89,7 @@ for label in unique_labels:
   cort = sitk.Mask(den>=cort_thresh, this)
 
 
-  #for kneeBML, we only need the bone marrow region:
+  #for edema imaging, we only need the bone marrow region:
   result = new_label*trab
 
   # Add together in a single image
