@@ -17,6 +17,7 @@ def DECT_Calibration(filePath,lowenergy_filename,highenergy_filename,HA_mask_fnm
     img_size = mono_40.GetSize()
     img_spacing = mono_40.GetSpacing()
     img_origin = mono_40.GetOrigin()
+    img_direction = img_GSI.GetDirection()
 
 
     #Calculate average intensity in phantom and find line of best fit:
@@ -77,7 +78,7 @@ def DECT_Calibration(filePath,lowenergy_filename,highenergy_filename,HA_mask_fnm
     #save the slope and offset values to csv file
     d = {'0 slope 40keV': [m_40], '1 offset 40keV': [b_40], '2 slope 90keV': [m_90], '3 offset 90keV': [b_90]}
     df = pd.DataFrame(data=d)
-    df.to_csv('CalibrationSlope&Offset_DECT.csv',mode='a')
+    df.to_csv(filePath+'/CalibrationSlope&Offset_DECT.csv',mode='a')
 
     #Convert image from HU to mgHA using best fit line from phantom.
     #Based on method from Sfeir et al., Bone 2018
@@ -87,6 +88,7 @@ def DECT_Calibration(filePath,lowenergy_filename,highenergy_filename,HA_mask_fnm
     img_HA = sitk.GetImageFromArray(mgHA_array)
     img_HA.SetSpacing(img_spacing)
     img_HA.SetOrigin(img_origin)
+    img_HA.SetDirection(img_direction)
 
 
     sitk.WriteImage(img_HA,filePath+'/'+'Calibrated_DECT.mha',True)
