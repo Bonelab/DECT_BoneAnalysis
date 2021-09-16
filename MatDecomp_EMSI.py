@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import argparse
 from bonelab.util.echo_arguments import echo_arguments
-# import Mono_ScatterPlotAnalysis_v1 as spa
-# import MatDecomp_library_v1 as mdc
+
 
 def MatDecomp_EMSI(filePath,lowenergy_filename,highenergy_filename,marrow_attenuation_low,marrow_attenuation_high,edema_attenuation_low,edema_attenuation_high,bone_attenuation_low,bone_attenuation_high):
 
@@ -153,7 +152,7 @@ DOI: https://doi.org/10.1002/mp.14791
     # Set up argument parsing
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
-        prog="blMatDecomp_EMSI",
+        prog="MatDecomp_EMSI",
         description=description
     )
 

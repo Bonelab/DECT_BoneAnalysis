@@ -17,7 +17,7 @@ def DECT_Calibration(filePath,lowenergy_filename,highenergy_filename,HA_mask_fnm
     img_size = mono_40.GetSize()
     img_spacing = mono_40.GetSpacing()
     img_origin = mono_40.GetOrigin()
-    img_direction = img_GSI.GetDirection()
+    img_direction = mono_40.GetDirection()
 
 
     #Calculate average intensity in phantom and find line of best fit:
