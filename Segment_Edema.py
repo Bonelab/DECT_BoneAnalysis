@@ -5,6 +5,8 @@ import numpy as np
 import argparse
 from bonelab.util.echo_arguments import echo_arguments
 
+
+
 def NLM_filter(filePath,CT_SoftTissue_fraction):
     edema_array = sitk.GetArrayFromImage(CT_SoftTissue_fraction)
 
@@ -68,20 +70,21 @@ def NLM_filter(filePath,CT_SoftTissue_fraction):
     return edema_img_filtered_edemaonly
 
 
-def threshold_edema_3mat(filePath,edema_fraction_fnm, mask_fnm,bone_id):
-    #define thresholds:
+def threshold_edema_3mat(filePath,edema_fraction_fnm, mask_fnm,bone_id,injured_side,use_contralateral):
+    #define thresholds
+    #these thresholds determined based on optimizing the method for comparison of DECT to MRI using the first 10 SALTACII scans
     if bone_id == 'Femur':
         lower_thres = 735
+        bone_label = 1
     elif bone_id == 'Tibia':
         lower_thres = 616
+        bone_label = 2
 
     #read in the edema fraction image
     muscle_fraction = sitk.ReadImage(filePath+'/'+edema_fraction_fnm+'.mha', sitk.sitkFloat32)
 
-
     #apply non-local means filter to smooth edema fraction image:
-    muscle_fraction = NLM_filter(filePath,muscle_fraction)
-
+    # muscle_fraction = NLM_filter(filePath,muscle_fraction)
 
     #Simple threshold of edema fraction image: >= lower_thres = edema:
     thres_edema = muscle_fraction > lower_thres
@@ -89,11 +92,7 @@ def threshold_edema_3mat(filePath,edema_fraction_fnm, mask_fnm,bone_id):
 
     #mask by endosteal mask for the bone of interest:
     marrow_mask = sitk.ReadImage(filePath+'/'+mask_fnm+'.mha', sitk.sitkFloat32)
-    if bone_id == "Femur":
-        marrow_mask_bin = marrow_mask==1
-    elif bone_id == "Tibia":
-        marrow_mask_bin = marrow_mask==2
-
+    marrow_mask_bin = marrow_mask==bone_label
 
     erode = sitk.BinaryErodeImageFilter()
     erode.SetKernelRadius(3)
@@ -155,7 +154,8 @@ def TransformContra(img_injured,bone_id,filePath):
 
     return contra_registered
 
-def threshold_edema_subtractcontra(filePath,edema_fraction_fnm,mask_fnm,participant_id,bone_id,injured_side):
+def threshold_edema_subtractcontra(filePath,edema_fraction_fnm,mask_fnm,bone_id,injured_side,use_contralateral):
+    #these thresholds determined based on optimizing the subtract_contra method for comparison of DECT to MRI using the first 10 SALTACII scans
     if bone_id == 'Femur':
         lower_thres = 682
     elif bone_id == 'Tibia':
@@ -257,13 +257,21 @@ def main():
                         type=str,
                         help="Filename for the edema fraction image")
     parser.add_argument("--mask_fnm","-m",
-                        default='IMG_LANG',
+                        default='Calibrated_StandardSEQCT_LANG',
                         type=str,
                         help="Filename for the marrow mask image")
     parser.add_argument("--bone_id","-b",
                         default='Tibia',
                         type=str,
                         help="Bone of interest (Femur or Tibia)")
+    parser.add_argument("--use_contralateral","-uc",
+                        default='N',
+                        type=str,
+                        help="Use data from the contralateral knee to improve the segmentation (Y or N)")
+    parser.add_argument("--injured_side","-i",
+                        default='left',
+                        type=str,
+                        help="Side of injured knee (left or right)")
 
 
     # Parse and display
@@ -271,7 +279,10 @@ def main():
     print(echo_arguments('Segment_Edema', vars(args)))
 
     # Run program
-    threshold_edema_3mat(**vars(args))
+    if args.use_contralateral == "N":
+        threshold_edema_3mat(**vars(args))
+    elif args.use_contralateral == "Y":
+        threshold_edema_subtractcontra(**vars(args))
 
 
 if __name__ == '__main__':

@@ -139,7 +139,7 @@ and will perform material decomposition to generate 3 images corresponding to
 the fraction of each voxel consisting of bone, normal marrow, and edema.
 
 Default values for  monochromatic energies and material decomposition parameters
-are those optimized from the KneeBML study. However, different parameters can be
+are those optimized from the KneeBML study. However, if desired, different parameters can be
 provided.
 
 This method has been published as de Bakker et al. (2021) "A quantitative assessment of dual energy computed tomography-based material decomposition for imaging bone marrow edema associated with acute knee injury" Med Phys
