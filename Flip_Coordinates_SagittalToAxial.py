@@ -6,7 +6,7 @@ import argparse
 from bonelab.util.echo_arguments import echo_arguments
 
 
-def Flip_SagToAx(filePath,participant_id,img_fnm):
+def Flip_SagToAx(filePath,img_fnm):
     moving = sitk.ReadImage(filePath+'/'+img_fnm+'.mha', sitk.sitkFloat32)
 
     moving.SetOrigin([0,0,0])
@@ -48,7 +48,7 @@ def Flip_SagToAx(filePath,participant_id,img_fnm):
     resample2.SetTransform(tfm_flipxy)
     mr_flipYZ_flipXY = resample2.Execute(mr_flipYZ)
 
-    sitk.WriteImage(mr_flipYZ_flipXY, filePath+'/'+participant_id+'_'+img_fnm+'_flipYZ_flipXY.mha',True)
+    sitk.WriteImage(mr_flipYZ_flipXY, filePath+'/'+img_fnm+'_flipYZ_flipXY.mha',True)
 
 
 
@@ -77,13 +77,10 @@ def main():
     parser.add_argument("filePath",
                         type=str,
                         help="The filepath")
-    parser.add_argument("participant_id",
-                        type=str,
-                        help="The participant ID")
     parser.add_argument("--img_fnm","-if",
                         default='Sag_PD',
                         type=str,
-                        help="Filename for the simululated monoenergetic CT image")
+                        help="Filename for MRI")
 
 
     # Parse and display

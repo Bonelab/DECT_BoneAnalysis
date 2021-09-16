@@ -20,6 +20,18 @@ def FindLabels(patient_id):
 
     return f_i,t_i,f_c,t_c
 
+def FindInjuredSide(patient_id):
+    side_mat = np.loadtxt(open("SegLabels.csv", "rb"), delimiter=",", skiprows=1, usecols=(4,5))
+    if patient_id == "SALTACII_0037":
+        patient_num = 36
+    elif patient_id == "SALTACII_0040":
+        patient_num = 37
+    else:
+        patient_num = int(patient_id[len(patient_id)-4:])
+
+    side_num = side_mat[patient_num-1,1]
+    return side_num
+
 def mirror_img(filePath,img_fnm,img,img_flipped):
     #Creates mirrored (flipped) images -- needed to allow contralateral knee to align with injured knee
     img_flipped.SetDirection([-1, 0, 0, 0, 1, 0, 0, 0, 1])
@@ -39,7 +51,7 @@ def mirror_img(filePath,img_fnm,img,img_flipped):
     return img_mirrored
 
 
-def register_contra(filePath,participant_id,img_fnm,mask_fnm,bone_id,injured_side):
+def register_contra(filePath,participant_id,img_fnm,mask_fnm,bone_id):
     # a = os.path.split(filePath)
     # b = len(a)
     # participant_id = a[b-1]
@@ -54,6 +66,12 @@ def register_contra(filePath,participant_id,img_fnm,mask_fnm,bone_id,injured_sid
     elif bone_id == 'Tibia':
         bone_label = t_i
         contra_label = t_c
+
+    side_num = FindInjuredSide(participant_id)
+    if side_num == 0:
+        injured_side = 'left'
+    elif side_num == 1:
+        injured_side = 'right'
 
     #Read images
     img = sitk.ReadImage(filePath+'/'+img_fnm+'.mha', sitk.sitkFloat32)
@@ -98,9 +116,9 @@ def register_contra(filePath,participant_id,img_fnm,mask_fnm,bone_id,injured_sid
     contra_mask.SetOrigin((0,0,0))
 
     sitk.WriteImage(img_cropped,output_filePath+'/'+img_fnm+'_injured_cropped.mha',True)
-    sitk.WriteImage(contra_cropped,output_filePath+'/'+img_fnm+'_contra_cropped.mha',True)
+    sitk.WriteImage(contra_cropped,output_filePath+'/'+img_fnm+'_contra_cropped_mirrorred.mha',True)
     sitk.WriteImage(img_mask, output_filePath+'/'+'injured_mask_cropped.mha',True)
-    sitk.WriteImage(contra_mask, output_filePath+'/'+'contra_mask_cropped.mha',True)
+    sitk.WriteImage(contra_mask, output_filePath+'/'+'contra_mask_cropped_mirrored.mha',True)
 
     #Register the mirrored contralateral to the injured knee, using only data from the bone of interest (tibia or femur),
     #with registration initialization based on moments, and mutual information similarity metric
@@ -189,17 +207,13 @@ def main():
                         type=str,
                         help="Filename for the simululated monoenergetic CT image")
     parser.add_argument("--mask_fnm","-m",
-                        default='40keV_SEG',
+                        default='Calibrated_StandardSEQCT_SEG',
                         type=str,
                         help="Filename for the mask image of major bones")
     parser.add_argument("--bone_id","-b",
                         default='Tibia',
                         type=str,
                         help="Bone of interest (Femur or Tibia)")
-    parser.add_argument("--injured_side","-i",
-                        default='left',
-                        type=str,
-                        help="Side of injury (right or left)")
 
     # Parse and display
     args = parser.parse_args()
