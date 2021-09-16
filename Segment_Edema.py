@@ -84,7 +84,7 @@ def threshold_edema_3mat(filePath,edema_fraction_fnm, mask_fnm,bone_id,injured_s
     muscle_fraction = sitk.ReadImage(filePath+'/'+edema_fraction_fnm+'.mha', sitk.sitkFloat32)
 
     #apply non-local means filter to smooth edema fraction image:
-    # muscle_fraction = NLM_filter(filePath,muscle_fraction)
+    muscle_fraction = NLM_filter(filePath,muscle_fraction)
 
     #Simple threshold of edema fraction image: >= lower_thres = edema:
     thres_edema = muscle_fraction > lower_thres
@@ -105,7 +105,6 @@ def threshold_edema_3mat(filePath,edema_fraction_fnm, mask_fnm,bone_id,injured_s
     cast.SetOutputPixelType(sitk.sitkFloat32)
     edema_masked = marrow_mask_er*thres_edema
 
-    sitk.WriteImage(edema_masked,'test.mha')
 
     #Component labeling to remove small clusters less than 100 voxels in size:
     cc_filter = sitk.ConnectedComponentImageFilter()
