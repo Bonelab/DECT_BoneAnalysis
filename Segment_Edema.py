@@ -115,43 +115,69 @@ def threshold_edema_3mat(filePath,edema_fraction_fnm, mask_fnm,bone_id,injured_s
     cl_relabeled = cc_relabel.Execute(cl)
     cl_relabeled_thres = cl_relabeled >=1
 
-    sitk.WriteImage(cl_relabeled_thres, filePath+'/'+'edema_thres_final_'+bone_id+'.mha',True)
+    sitk.WriteImage(cl_relabeled_thres, filePath+'/'+'edema_thres_final_singlethres'+bone_id+'.mha',True)
 
-def TransformContra(img_injured,bone_id,filePath):
-    #Crop flipped filtered edema image and transform to align contralateral bone with injured side:
-    flipped_fnm = 'edema_NLMFiltered_flipped'
-    # flipped_fnm = 'edema_NLMFiltered_flipped'
-    # original_fnm = 'edema_NLMFiltered'
-    img_flipped = sitk.ReadImage(filePath+'/'+flipped_fnm+'.mha',sitk.sitkFloat32)
-    # img_org = sitk.ReadImage(filePath+'/'+original_fnm+'.mha',sitk.sitkFloat32)
-
-    crop_DE = sitk.CropImageFilter()
-
-    flipped_size = img_flipped.GetSize()
-    if injured_side == 'left':
-        crop_DE.SetLowerBoundaryCropSize([np.int(flipped_size[0]/2),0,0])
-        crop_DE.SetUpperBoundaryCropSize([0,0,0])
-    elif injured_side == 'right':
-        crop_DE.SetLowerBoundaryCropSize([0,0,0])
-        crop_DE.SetUpperBoundaryCropSize([np.int(flipped_size[0]/2),0,0])
-
-    img_flipped = crop_DE.Execute(img_flipped)
-    img_flipped. SetOrigin([0,0,0])
-
-
-    tfm_name = 'rigid_registration_contra_'+bone_id
-    contra_tfm = sitk.ReadTransform(filePath+'/'+bone_id+'/'+tfm_name+'.tfm')
+def mirror_img(filePath,img_fnm,img,img_flipped):
+    #Creates mirrored (flipped) images -- needed to allow contralateral knee to align with injured knee
+    img_flipped.SetDirection([-1, 0, 0, 0, 1, 0, 0, 0, 1])
+    img_flipped.SetOrigin((0,0,0))
 
     resample = sitk.ResampleImageFilter()
-    resample.SetReferenceImage(img_flipped)
+    resample.SetReferenceImage(img)
+    tfm = sitk.CenteredTransformInitializer(img,
+                                            img_flipped,
+                                            sitk.VersorRigid3DTransform(),
+                                            sitk.CenteredTransformInitializerFilter.GEOMETRY)
 
     resample.SetInterpolator(sitk.sitkLinear)
+    resample.SetTransform(tfm)
+    img_mirrored = resample.Execute(img_flipped)
+    sitk.WriteImage(img_mirrored, filePath+'/'+img_fnm+'_mirrored.mha',True)
+    return img_mirrored
+
+def TransformContra(edema_img,bone_id,filePath,injured_side,img_fnm):
+    #Crop flipped filtered edema image and transform to align contralateral bone with injured side:
+    img = sitk.ReadImage(filePath+'/'+img_fnm+'.mha', sitk.sitkFloat32)
+    img_flipped = sitk.ReadImage(filePath+'/'+img_fnm+'.mha', sitk.sitkFloat32)
+
+    img_flipped = mirror_img(filePath,img_fnm,img,img_flipped)
+
+    contra = img_flipped
+
+    #Crop images to isolate injured/contralateral knee
+    img_size = img.GetSize()
+    crop_img = sitk.CropImageFilter()
+
+    if injured_side == 'left':
+        crop_img.SetLowerBoundaryCropSize([np.int(img_size[0]/2),0,0])
+        crop_img.SetUpperBoundaryCropSize([0,0,0])
+    elif injured_side == 'right':
+        crop_img.SetLowerBoundaryCropSize([0,0,0])
+        crop_img.SetUpperBoundaryCropSize([np.int(img_size[0]/2),0,0])
+
+    img_cropped = crop_img.Execute(img)
+    contra_cropped = crop_img.Execute(contra)
+
+    img_cropped.SetOrigin((0,0,0))
+    contra_cropped.SetOrigin((0,0,0))
+
+    sitk.WriteImage(img_cropped,filePath+'/'+img_fnm+'_injured_cropped.mha',True)
+    sitk.WriteImage(contra_cropped,filePath+'/'+img_fnm+'_contra_cropped_mirrorred.mha',True)
+
+    tfm_name = 'rigid_registration_contra_'+bone_id
+    contra_tfm = sitk.ReadTransform(filePath+'/'+tfm_name+'.tfm')
+
+    resample = sitk.ResampleImageFilter()
+    resample.SetReferenceImage(img_cropped)
+
+    # resample.SetInterpolator(sitk.sitkLinear)
+    resample.SetInterpolator(sitk.sitkBSpline)
     resample.SetTransform(contra_tfm)
-    contra_registered = resample.Execute(img_flipped)
+    contra_registered1 = resample.Execute(contra_cropped)
 
-    sitk.WriteImage(contra_registered,filePath+'/'+bone_id+'/'+'/Edema_Contra_Registered.mha',True)
+    sitk.WriteImage(contra_registered1,filePath+'/Edema_Contra_Registered_'+bone_id+'.mha',True)
 
-    return contra_registered
+    return contra_registered1
 
 def threshold_edema_subtractcontra(filePath,edema_fraction_fnm,mask_fnm,bone_id,injured_side,use_contralateral):
     #these thresholds determined based on optimizing the subtract_contra method for comparison of DECT to MRI using the first 10 SALTACII scans
@@ -170,11 +196,32 @@ def threshold_edema_subtractcontra(filePath,edema_fraction_fnm,mask_fnm,bone_id,
     #mask by endosteal mask for the bone of interest:
     marrow_mask = sitk.ReadImage(filePath+'/'+mask_fnm+'.mha', sitk.sitkFloat32)
     if bone_id == "Femur":
-        marrow_mask_bin = marrow_mask==1
+        endosteal_mask = marrow_mask==1
     elif bone_id == "Tibia":
-        marrow_mask_bin = marrow_mask==2
+        endosteal_mask = marrow_mask==4
 
-    contra_img = TransformContra(muscle_fraction,participant_id,bone_id,filePath)
+    erode = sitk.BinaryErodeImageFilter()
+    erode.SetKernelRadius(3)
+    erode.SetForegroundValue(1)
+    endosteal_mask = erode.Execute(endosteal_mask)
+
+    img_size = muscle_fraction.GetSize()
+    crop_DE = sitk.CropImageFilter()
+    if injured_side == 'left':
+        crop_DE.SetLowerBoundaryCropSize([np.int(img_size[0]/2),0,0])
+        crop_DE.SetUpperBoundaryCropSize([0,0,0])
+    elif injured_side == 'right':
+        crop_DE.SetLowerBoundaryCropSize([0,0,0])
+        crop_DE.SetUpperBoundaryCropSize([np.int(img_size[0]/2),0,0])
+
+    injured_img = crop_DE.Execute(muscle_fraction)
+    injured_img.SetOrigin([0,0,0])
+    endosteal_mask = crop_DE.Execute(endosteal_mask)
+    endosteal_mask.SetOrigin([0,0,0])
+
+    sitk.WriteImage(injured_img,filePath+'/Edema_cropped.mha',True)
+
+    contra_img = TransformContra(muscle_fraction,bone_id,filePath,injured_side,edema_fraction_fnm)
 
     #filter contra image to remove some noise:
     gauss_filter = sitk.DiscreteGaussianImageFilter()
@@ -199,8 +246,8 @@ def threshold_edema_subtractcontra(filePath,edema_fraction_fnm,mask_fnm,bone_id,
 
     thres_img = sub_img_elevated > subtract_thres
 
-    sitk.WriteImage(elevatedsignal_mask, filePath+'/'+bone_id+'/elevated_signal_mask_boundMRI.mha',True)
-    sitk.WriteImage(thres_img,filePath+'/'+bone_id+'/double_thres_img_boundMRI.mha',True)
+    sitk.WriteImage(elevatedsignal_mask, filePath+'/elevated_signal_mask.mha',True)
+    sitk.WriteImage(thres_img,filePath+'/double_thres_img.mha',True)
 
     cc_filter = sitk.ConnectedComponentImageFilter()
     cl = cc_filter.Execute(thres_img)
@@ -213,7 +260,7 @@ def threshold_edema_subtractcontra(filePath,edema_fraction_fnm,mask_fnm,bone_id,
     cl_relabeled_thres = cl_relabeled >=1
 
     CT_edema_image = cl_relabeled_thres
-    sitk.WriteImage(CT_edema_image, filePath+'/'+bone_id+'/'+participant_id+'_edema_NLMFiltered_cc2_doublethres.mha',True)
+    sitk.WriteImage(CT_edema_image, filePath+'/'+'edema_Thres_final_doublethres_'+bone_id+'.mha',True)
 
 
 def main():
