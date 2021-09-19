@@ -41,10 +41,6 @@ def register_PD_CT(filePath,participant_id,CT_fnm,MRI_fnm,mask_fnm,bone_id):
 
     pixelType = sitk.sitkFloat32
 
-    patient_id = 'SALTACII_0027'
-    bone = 'Tibia'
-
-
     f_i,t_i,f_c,t_c = FindLabels(participant_id)
     if bone == 'Femur':
         BONE_LABEL = f_i
@@ -133,7 +129,7 @@ def register_PD_CT(filePath,participant_id,CT_fnm,MRI_fnm,mask_fnm,bone_id):
 
     d2 = {'Landmark1_fixed': fixed_initialpts[0],'Landmark2_fixed': fixed_initialpts[1], 'Landmark3_fixed': fixed_initialpts[2], 'Landmark4_fixed': fixed_initialpts[3], 'Landmark1_moving': moving_initialpts[0], 'Landmark2_moving': moving_initialpts[1], 'Landmark3_moving': moving_initialpts[2], 'Landmark4_moving': moving_initialpts[3]}
     df2 = pd.DataFrame(data=d2)
-    df2.to_csv(fixedfnm+'_Landmarks_'+bone+'.csv')
+    df2.to_csv(filePath+'/'+fixedfnm+'_Landmarks_'+bone+'.csv')
 
     print('fixed_initialpts', fixed_initialpts)
     print('moving_initialpts', moving_initialpts)
