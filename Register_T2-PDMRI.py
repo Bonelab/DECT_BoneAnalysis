@@ -16,19 +16,26 @@ def FindLabels(patient_id):
 
     return f_i,t_i,f_c,t_c
 
-def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,bone_id,injured_side):
+def FindInjuredSide(patient_id):
+    side_mat = np.loadtxt(open("SegLabels.csv", "rb"), delimiter=",", skiprows=1, usecols=(4,5))
+    patient_num = int(patient_id[len(patient_id)-4:])
+
+    side_num = side_mat[patient_num-1,1]
+    return side_num
+
+def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,T1_CT_tfmname,bone_id):
 
     output_filePath = filePath
 
     pixelType = sitk.sitkFloat32
 
     #Read images:
-    fixedfnm = participant_id+'_'+fixed_img
+    fixedfnm = fixed_img
     fixed = sitk.ReadImage(filePath+'/'+fixedfnm+'.mha', sitk.sitkFloat32)
     fixed_size = fixed.GetSize()
     fixed_spacing = fixed.GetSpacing()
 
-    movingfnm = participant_id+'_'+moving_img
+    movingfnm = moving_img
     moving = sitk.ReadImage(filePath+'/'+movingfnm+'.mha', sitk.sitkFloat32)
     moving.SetOrigin([0,0,0])
     moving_size = moving.GetSize()
@@ -41,12 +48,18 @@ def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,bone_id
     elif bone_id == 'Tibia':
         BONE_LABEL = t_i
 
-    ctmask_fnm = participant_id+'_'+mask_fnm
+    ctmask_fnm = mask_fnm
     ct_mask = sitk.ReadImage(filePath+'/'+ctmask_fnm+'.mha')
 
     #Crop mask to isolate injured knee
     img_size = ct_mask.GetSize()
     crop_img = sitk.CropImageFilter()
+
+    side_num = FindInjuredSide(participant_id)
+    if side_num == 0:
+        injured_side = 'left'
+    elif side_num == 1:
+        injured_side = 'right'
 
     if injured_side == 'left':
         crop_img.SetLowerBoundaryCropSize([np.int(img_size[0]/2),0,0])
@@ -57,12 +70,11 @@ def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,bone_id
 
     ct_mask = crop_img.Execute(ct_mask)
     ct_mask.SetOrigin((0,0,0))
-    sitk.WriteImage(ct_mask,output_filePath+'/'+ctmask_fnm+'_injured.mha',True)
+    sitk.WriteImage(ct_mask,output_filePath+'/'+ctmask_fnm+'_cropped.mha',True)
     ct_mask = ct_mask == BONE_LABEL
 
     #Transform periosteal mask image from CT image space to T1/PD image space (using Ti/PD-DECT transformation file):
-    T1_CT_tfmname = participant_id+'_PD-CT_registration_'+bone_id
-    T1toCT_tfm = sitk.ReadTransform(filePath+'/'+T1_CT_tfmname+'.tfm')
+    T1toCT_tfm = sitk.ReadTransform(filePath+'/'+participant_id+'_'+T1_CT_tfmname+'_'+bone_id+'.tfm')
     T1toCT_tfm.SetInverse()
 
     resample = sitk.ResampleImageFilter()
@@ -152,17 +164,18 @@ def main():
                         type=str,
                         help="Filename for the moving image (T2 FS MRI)")
     parser.add_argument("--mask_fnm","-m",
-                        default='40keV_SEG',
+                        default='Calibrated_StandardSEQCT_SEG',
                         type=str,
                         help="Filename for the mask image of major bones")
+    parser.add_argument("--T1_CT_tfmname","-tfm",
+                        default='T1-CT_registration',
+                        type=str,
+                        help="Base filename for transformation file to transform CT mask into T1/PD image space")
     parser.add_argument("--bone_id","-b",
                         default='Tibia',
                         type=str,
                         help="Bone of interest (Femur or Tibia)")
-    parser.add_argument("--injured_side","-i",
-                        default='left',
-                        type=str,
-                        help="Side of injury (right or left)")
+
 
 
     # Parse and display

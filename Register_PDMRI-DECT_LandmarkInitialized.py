@@ -82,10 +82,10 @@ def register_PD_CT(filePath,participant_id,CT_fnm,MRI_fnm,mask_fnm,bone_id):
     seg_img = sitk.ReadImage(filePath+'/'+mask_fnm+'.mha')
     seg_img = crop_DE.Execute(seg_img)
     seg_img.SetOrigin((0,0,0))
-    sitk.WriteImage(seg_img, filePath+'/'+fixedfnm+'_SEG_cropped.mha',True)
+    sitk.WriteImage(seg_img, filePath+'/'+mask_fnm+'_cropped.mha',True)
 
     fixed_image_mask = seg_img==BONE_LABEL
-    sitk.WriteImage(fixed_image_mask, filePath+'/'+fixedfnm+'_SEG_cropped_'+bone+'.mha',True)
+    sitk.WriteImage(fixed_image_mask, filePath+'/'+mask_fnm+'_cropped_'+bone+'.mha',True)
 
     #create a mask for image registration that is focused on the cortical region only (with some dilation in both directions)
     #excludes most of marrow and external soft tissues
