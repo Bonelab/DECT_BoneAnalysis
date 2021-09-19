@@ -159,7 +159,7 @@ def register_PD_CT(filePath,participant_id,CT_fnm,MRI_fnm,mask_fnm,bone_id):
 
 
 
-    sitk.WriteTransform(initial_transformation, filePath+'/'+participant_id+'_T1-CT_manualinitialguess_'+bone+'.tfm')
+    sitk.WriteTransform(initial_transformation, filePath+'/'+participant_id+'_PD-CT_manualinitialguess_'+bone+'.tfm')
 
     #landmark-initialized registration:
     R = sitk.ImageRegistrationMethod()
@@ -181,7 +181,7 @@ def register_PD_CT(filePath,participant_id,CT_fnm,MRI_fnm,mask_fnm,bone_id):
 
 
     outTx = R.Execute(sitk.Normalize(fixed_cropped), sitk.Normalize(moving_cropped))
-    sitk.WriteTransform(outTx, filePath+'/'+participant_id+'_T1-CT_registration_'+bone+'.tfm')
+    sitk.WriteTransform(outTx, filePath+'/'+participant_id+'_PD-CT_registration_'+bone+'.tfm')
 
 
     print("-------")

@@ -23,7 +23,7 @@ def FindInjuredSide(patient_id):
     side_num = side_mat[patient_num-1,1]
     return side_num
 
-def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,T1_CT_tfmname,bone_id):
+def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,PD_CT_tfmname,bone_id):
 
     output_filePath = filePath
 
@@ -74,7 +74,7 @@ def register_T2_PD(filePath,participant_id,fixed_img,moving_img,mask_fnm,T1_CT_t
     ct_mask = ct_mask == BONE_LABEL
 
     #Transform periosteal mask image from CT image space to T1/PD image space (using Ti/PD-DECT transformation file):
-    T1toCT_tfm = sitk.ReadTransform(filePath+'/'+participant_id+'_'+T1_CT_tfmname+'_'+bone_id+'.tfm')
+    T1toCT_tfm = sitk.ReadTransform(filePath+'/'+participant_id+'_'+PD_CT_tfmname+'_'+bone_id+'.tfm')
     T1toCT_tfm.SetInverse()
 
     resample = sitk.ResampleImageFilter()
@@ -145,7 +145,7 @@ def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
-        prog="Register_MRI",
+        prog="Register_T2-PDMRI",
         description=description
     )
 
@@ -167,8 +167,8 @@ def main():
                         default='Calibrated_StandardSEQCT_SEG',
                         type=str,
                         help="Filename for the mask image of major bones")
-    parser.add_argument("--T1_CT_tfmname","-tfm",
-                        default='T1-CT_registration',
+    parser.add_argument("--PD_CT_tfmname","-tfm",
+                        default='PD-CT_registration',
                         type=str,
                         help="Base filename for transformation file to transform CT mask into T1/PD image space")
     parser.add_argument("--bone_id","-b",
@@ -180,7 +180,7 @@ def main():
 
     # Parse and display
     args = parser.parse_args()
-    print(echo_arguments('Register_MRI', vars(args)))
+    print(echo_arguments('Register_T2-PDMRI', vars(args)))
 
     # Run program
     register_T2_PD(**vars(args))
