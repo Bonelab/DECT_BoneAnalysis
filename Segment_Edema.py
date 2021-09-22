@@ -315,7 +315,7 @@ def main():
                         type=str,
                         help="Use data from the contralateral knee to improve the segmentation (Y or N)")
     parser.add_argument("--injured_side","-i",
-                        default='left',
+                        default='right',
                         type=str,
                         help="Side of injured knee (left or right)")
 

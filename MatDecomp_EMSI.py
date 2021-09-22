@@ -47,12 +47,11 @@ def MatDecomp_EMSI(filePath,lowenergy_filename,highenergy_filename,marrow_attenu
 
 
     #remove double negatives:
-    print('removing double negatives')
     Z_DN=((Z[:,:,:,0]*Z[:,:,:,1]*Z[:,:,:,2])>0) & ((np.absolute(Z[:,:,:,0])+np.absolute(Z[:,:,:,1])+np.absolute(Z[:,:,:,2]))>1)
     Z_S=((Z[:,:,:,0]*Z[:,:,:,1]*Z[:,:,:,2])>0) & ((np.absolute(Z[:,:,:,0])+np.absolute(Z[:,:,:,1])+np.absolute(Z[:,:,:,2]))==1)
 
 
-    print(np.sum(Z_DN))
+
     #Everything Negative is set to zero
     #And set the remaining positive to 1 if it had a double negative
     Z[(Z_DN) & (Z[:,:,:,0]>1.00),0] =1.00
