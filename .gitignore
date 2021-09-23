@@ -7,3 +7,4 @@ SegLabels.csv
 *.tfm
 *.docx
 *.csv
+DECT_BMDFE/*
