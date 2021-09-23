@@ -86,6 +86,7 @@ def ReadMha(filePath, fixed_fnm, moving_fnm):
   #Read the path that the user will input.
   fnm1 = filePath+'/'+fixed_fnm+'.mha'
   MhaReader.SetFileName(fnm1)
+  print(fnm1)
   MhaReader.Update()
 
   #Store the image in a global variable, so that it can be accesed later in any part of the code.
@@ -99,6 +100,7 @@ def ReadMha(filePath, fixed_fnm, moving_fnm):
 
  #Read the path that the user will input.
   fnm2 = filePath+'/'+moving_fnm+'.mha'
+  print(fnm2)
   MhaReader2.SetFileName(fnm2)
   MhaReader2.Update()
 
@@ -245,13 +247,18 @@ def Navigate2D(fixed_type, moving_type):
   moving_mapperNavigate2D = vtk.vtkImageMapper()
   moving_mapperNavigate2D.SetInputData(moving_imageNavigate2D)
   moving_mapperNavigate2D.SetZSlice(zSlice_moving)
+
   # window and level have to be adjusted for better visualization
   # moving_mapperNavigate2D.SetColorWindow(200)
   # moving_mapperNavigate2D.SetColorLevel(100)
-  moving_mapperNavigate2D.SetColorWindow(600)
-  moving_mapperNavigate2D.SetColorLevel(300)
-  # moving_mapperNavigate2D.SetColorWindow(200)
-  # moving_mapperNavigate2D.SetColorLevel(100)
+  if (moving_type == 'MR'):
+      # mapperNavigate2D.SetColorWindow(623)
+      moving_mapperNavigate2D.SetColorWindow(600)
+      moving_mapperNavigate2D.SetColorLevel(300)
+  elif(moving_type == 'HR'):
+      moving_mapperNavigate2D.SetColorWindow(9000)
+      moving_mapperNavigate2D.SetColorLevel(3000)
+
 
   moving_actorNavigate2D = vtk.vtkActor2D()
   moving_actorNavigate2D.SetMapper(moving_mapperNavigate2D)
