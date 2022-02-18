@@ -41,7 +41,7 @@ def NLM_filter(filePath,CT_SoftTissue_fraction):
 
     for i in range(Ws+Wp,img_size[2]-Ws-Wp-1):
         for j in range(Ws+Wp,img_size[1]-Ws-Wp-1):
-            for k in range(Ws+Wp,img_size[1]-Ws-Wp-1):
+            for k in range(Ws+Wp,img_size[0]-Ws-Wp-1):
 
                 edema_patch = edema_array[i-Wp:i+Wp+1,j-Wp:j+Wp+1,k-Wp:k+Wp+1]
                 edema_patch_array[i,j,k,:] = np.reshape(edema_patch,[1,Wp_length])
@@ -50,7 +50,7 @@ def NLM_filter(filePath,CT_SoftTissue_fraction):
 
     for i in range(Ws+Wp,img_size[2]-Ws-Wp-1):
         for j in range(Ws+Wp,img_size[1]-Ws-Wp-1):
-            for k in range(Ws+Wp,img_size[1]-Ws-Wp-1):
+            for k in range(Ws+Wp,img_size[0]-Ws-Wp-1):
 
                 edema_search = edema_array[i-Ws:i+Ws+1,j-Ws:j+Ws+1,k-Ws:k+Ws+1]
 
